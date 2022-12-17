@@ -50,7 +50,7 @@ head(daily_intensity)
 ```{r}
 ggplot(data=sleep, mapping=aes(x=(TotalMinutesAsleep/TotalTimeInBed))) + geom_histogram(color='black', fill='coral', binwidth = 0.005) + labs(title = "Percentage of Sleep over Time In Bed")
 ```
-<img src = "SleepvsTimeBed.png">   
+<img src = "SleepvsTimeBed.png" width="800"/>   
 According to the chart, the most percentage people in sleep mode is 95% of time in bed. Almost people fall asleep fast when they are in bed, because the histogram is inclined to the range from 0.94 to 1.0.    
 
 4. We draw visualizations to compare effect of Distance, Steps, and Intensity on burning calories.   
@@ -58,9 +58,45 @@ According to the chart, the most percentage people in sleep mode is 95% of time 
 ```{r}
 ggplot(data=activity, mapping=aes(x = Calories, y = TotalSteps)) + geom_jitter(color = 'coral') +geom_smooth(color = 'black') + labs(title = "Total Steps vs. Calories Burnt")
 ```
-<img scr = "Step-Calories.png">   
+<img src = "Step-Calories.png" width="800"/>   
 
 ```{r}
 ggplot(data=activity, mapping=aes(x = Calories, y = TotalDistance)) + geom_jitter(color = 'coral') +geom_smooth(color = 'black') + labs(title = "Total Distance vs. Calories Burnt")
 ```
-<img scr = "Distance-Calories.png">
+<img src = "Distance-Calories.png" width="800"/>   
+
+```{r}
+ggplot(data=activity, mapping=aes(x = Calories, y = Total_intensity)) + geom_jitter(color = 'coral') + geom_smooth(color = 'black') + labs(title = "Total Intensity vs. Calories Burnt")
+```
+<img src = "Intensity-Calories.png" width="800"/>   
+
+As we can see, all of them have positive effect on calories. When step and distance are quite close to each other in effectiveness, the best way to burn out calories among those three is intensity. So, the rank from most to least effective element is intensity, distance and step.  
+
+5. Analyze how people are active in days within a week. First, we create new data frame to customize the data we need.   
+```{r}
+sumdaily_intensity <- daily_intensity %>%
+  group_by(ActivityDate) %>%
+  drop_na() %>%
+  summarise(mean_daily_intensity = mean(Total_intensity))
+sumdaily_intensity$ActivityDate <- as.Date(sumdaily_intensity$ActivityDate)
+```
+
+Second, we create the visualization.  
+```{r}
+ggplot(sumdaily_intensity, mapping = aes(x = ActivityDate, y = mean_daily_intensity, fill=weekdays(ActivityDate) %in% c("Saturday","Sunday"))) + geom_histogram(stat = 'identity', color = 'black') + scale_x_date(date_labels = "%b-%d") + theme(axis.text.x = element_text(angle = 90)) + scale_fill_discrete(name="Is Weekend") + labs(title = "Average Intensity In A Day", subtitle = "Data source: Year 2016")
+```
+<img src = "Intensity-week.png" width="700"/>   
+
+According to the visualization, we realize people maintain the activeness within a week gradually. They have the most intensive activities on Saturdays. And they usually take break on Sundays.  
+
+# **Recommendations**
+Our target customer is young people (25-35 years old) who have awareness of body and health conditions. They tend to care of their diet, calories, fitness and sleep quality.  
+Based on the analysis above, there are some key points that we can adapt to company's marketing strategy.  
+* We can recommend customers, who desire to increase calories burnt, to focus on vigorous exercise intensity, while still depends on their heart rate and health condition.  
+  + We need a detailed research on which exercise level of intensity is suitable for them.  
+* We can develop a function on the app and "Time" watch to remind customers to go to bed early, as the sleeping time and time in bed is highly correlated.  
+  + Meanwhile, we need more data about sleep quality, such as how deep their sleep is versus total asleep minutes.  
+* As customers intend to be more active on Saturday, and relax on Sunday, we can customize notifications reminding them to enjoy exercise activities on Saturday and rest on the next day.  
+  + For better conclusion, we should collect longer data with more days recorded.  
+
+### Thanks for your reading.
