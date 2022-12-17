@@ -1,0 +1,107 @@
+---
+title: "BellaBeat_R-Markdown_v2"
+author: "Lauren Tran"
+date: "2022-11-30"
+output:
+  html_document: default
+  pdf_document: default
+---
+# **Business Tasks**
+How customers use smart devices through smart device usage data, so Bellabeat can introduce new marketing strategy.  
+1. What are some trends in smart device usage?  
+2. How could these trends apply to Bellabeat customers?  
+3. How could these trends help influence Bellabeat marketing strategy?  
+
+# **Stakeholders**
+* Urška Sršen: Bellabeat’s cofounder
+* Sando Mur: Mathematician and Bellabeat’s cofounder
+* Other people in Bellabeat’s analytics team
+
+# **Process & Analyze the data**
+1. Setting up the environment and loading the datasets.  
+```{r}
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(tibble)
+```
+
+```{r}
+activity <- read_csv("C:\\Users\\laure\\OneDrive\\Documents\\Data Study\\Case Study\\Fitabase Data 4.12.16-5.12.16\\merge-activity-intensity.csv")
+hourly_intensity <- read_csv("C:\\Users\\laure\\OneDrive\\Documents\\Data Study\\Case Study\\Fitabase Data 4.12.16-5.12.16\\hourlyIntensities_merged-2.csv")
+sleep <- read_csv("C:\\Users\\laure\\OneDrive\\Documents\\Data Study\\Case Study\\Fitabase Data 4.12.16-5.12.16\\sleepDay_merged.csv")
+daily_intensity <- read_csv("C:\\Users\\laure\\OneDrive\\Documents\\Data Study\\Case Study\\Fitabase Data 4.12.16-5.12.16\\dailyIntensities_edited.csv")
+```
+
+2. We can see the error of date format of those datasets. Now, we proceed to change the format in "sleep" dataset.  
+```{r}
+sleep$SleepDay = as.POSIXct(sleep$SleepDay, format = "%m/%d/%Y %I:%M:%S %p", tz = Sys.timezone())
+sleep$time <- format(sleep$SleepDay, format = "%H:%M:%S")
+sleep$date <- format(sleep$SleepDay, format = "%Y-%m-%d")
+head(sleep)
+```
+
+Then, we proceed to change the format in "daily_intensity" and "hourly_intensity" dataset.  
+```{r}
+daily_intensity$ActivityDate <-strptime(daily_intensity$ActivityDate, format = "%Y-%m-%d")
+format(daily_intensity$ActivityDate, format = "%Y-%m-%d")
+hourly_intensity$ActivityDate <- strptime(hourly_intensity$ActivityDate, format = "%m/%d/%Y")
+format(hourly_intensity$ActivityDate, format = "%Y-%m-%d")
+format(hourly_intensity$ActivityHour, format = "%H:%M:%S")
+head(hourly_intensity)
+head(daily_intensity)
+```
+
+3. We are checking how correlated between sleep time and total time in bed.  
+
+```{r}
+ggplot(data=sleep, mapping=aes(x=(TotalMinutesAsleep/TotalTimeInBed))) + geom_histogram(color='black', fill='coral', binwidth = 0.005) + labs(title = "Percentage of Sleep over Time In Bed")
+```
+
+According to the chart, the most percentage people in sleep mode is 95% of time in bed. Almost people fall asleep fast when they are in bed, because the histogram is inclined to the range from 0.94 to 1.0.    
+4. We draw visualizations to compare effect of Distance, Steps, and Intensity on burning calories.   
+```{r}
+ggplot(data=activity, mapping=aes(x = Calories, y = TotalSteps)) + geom_jitter(color = 'coral') +geom_smooth(color = 'black') + labs(title = "Total Steps vs. Calories Burnt")
+```
+
+```{r}
+ggplot(data=activity, mapping=aes(x = Calories, y = TotalDistance)) + geom_jitter(color = 'coral') +geom_smooth(color = 'black') + labs(title = "Total Distance vs. Calories Burnt")
+```
+
+```{r}
+ggplot(data=activity, mapping=aes(x = Calories, y = Total_intensity)) + geom_jitter(color = 'coral') + geom_smooth(color = 'black') + labs(title = "Total Intensity vs. Calories Burnt")
+```
+
+As we can see, all of them have positive effect on calories. When step and distance are quite close to each other in effectiveness, the best way to burn out calories among those three is intensity. So, the rank from most to least effective element is intensity, distance and step.  
+
+5. Analyze how people are active in days within a week. First, we create new data frame to customize the data we need.   
+```{r}
+sumdaily_intensity <- daily_intensity %>%
+  group_by(ActivityDate) %>%
+  drop_na() %>%
+  summarise(mean_daily_intensity = mean(Total_intensity))
+sumdaily_intensity$ActivityDate <- as.Date(sumdaily_intensity$ActivityDate)
+```
+
+Second, we create the visualization.  
+```{r}
+ggplot(sumdaily_intensity, mapping = aes(x = ActivityDate, y = mean_daily_intensity, fill=weekdays(ActivityDate) %in% c("Saturday","Sunday"))) + geom_histogram(stat = 'identity', color = 'black') + scale_x_date(date_labels = "%b-%d") + theme(axis.text.x = element_text(angle = 90)) + scale_fill_discrete(name="Is Weekend") + labs(title = "Average Intensity In A Day", subtitle = "Data source: Year 2016")
+```
+
+According to the visualization, we realize people maintain the activeness within a week gradually. They have the most intensive activities on Saturdays. And they usually take break on Sundays.  
+
+# **Recommendations**
+Our target customer is young people (25-35 years old) who have awareness of body and health conditions. They tend to care of their diet, calories, fitness and sleep quality.  
+Based on the analysis above, there are some key points that we can adapt to company's marketing strategy.  
+* We can recommend customers, who desire to increase calories burnt, to focus on vigorous exercise intensity, while still depends on their heart rate and health condition.  
+  + We need a detailed research on which exercise level of intensity is suitable for them.  
+* We can develop a function on the app and "Time" watch to remind customers to go to bed early, as the sleeping time and time in bed is highly correlated.  
+  + Meanwhile, we need more data about sleep quality, such as how deep their sleep is versus total asleep minutes.  
+* As customers intend to be more active on Saturday, and relax on Sunday, we can customize notifications reminding them to enjoy exercise activities on Saturday and rest on the next day.  
+  + For better conclusion, we should collect longer data with more days recorded.  
+
+## Thanks for your reading.
+
+
